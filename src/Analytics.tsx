@@ -66,7 +66,7 @@ async function establishAnalyticsSession(
   sessionData: ISessionData,
   setSessionId: Function
 ) {
-  return await fetch('https://analytics.sone.works/establish', {
+  return await fetch('/api/establish', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
