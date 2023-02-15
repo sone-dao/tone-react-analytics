@@ -15,13 +15,15 @@ const Analytics: React.FC<IAnalyticsProps> = ({ children }) => {
 
     if (!analyticsToken) {
       const data = {
-        dimensions: {
+        screen: {
           width: screen.width,
           height: screen.height,
         },
         languages: navigator.languages,
         userAgent: navigator.userAgent,
       }
+
+      console.log(data)
 
       establishAnalyticsSession(data, setAnalyticsSessionId)
     } else {
@@ -54,7 +56,7 @@ async function sendToAnalytics(sessionId: string, data: any) {
 }
 
 interface ISessionData {
-  dimensions: {
+  screen: {
     width: number
     height: number
   }
@@ -66,7 +68,7 @@ async function establishAnalyticsSession(
   sessionData: ISessionData,
   setSessionId: Function
 ) {
-  return await fetch('/api/establish', {
+  return await fetch('/api/analytics/establish', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
