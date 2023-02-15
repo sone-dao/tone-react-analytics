@@ -70,8 +70,6 @@ const Analytics: React.FC<IAnalyticsProps> = ({ children }) => {
     sessionData: ISessionData,
     setSessionId: Function
   ) {
-    console.log('Establishing analytics session...')
-
     return await fetch('/api/analytics/establish', {
       method: 'POST',
       headers: {
