@@ -5,6 +5,15 @@ export interface IAnalyticsProps {
   children: React.ReactNode
 }
 
+interface ISessionData {
+  screen: {
+    width: number
+    height: number
+  }
+  languages: readonly string[]
+  userAgent: string
+}
+
 const Analytics: React.FC<IAnalyticsProps> = ({ children }) => {
   const [analyticsSessionId, setAnalyticsSessionId] = useState<string>()
 
@@ -23,8 +32,6 @@ const Analytics: React.FC<IAnalyticsProps> = ({ children }) => {
         userAgent: navigator.userAgent,
       }
 
-      console.log(data)
-
       establishAnalyticsSession(data, setAnalyticsSessionId)
     } else {
       setAnalyticsSessionId(analyticsToken)
@@ -32,54 +39,60 @@ const Analytics: React.FC<IAnalyticsProps> = ({ children }) => {
   }, [])
 
   useEffect(() => {
-    /* Log changing of path in analytics */
+    if (analyticsSessionId && router.asPath)
+      sendToAnalytics(analyticsSessionId, {
+        action: 'navigation',
+        path: router.asPath,
+      })
   }, [router.asPath])
 
-  useEffect(() => console.log(analyticsSessionId), [analyticsSessionId])
+  useEffect(() => {
+    if (analyticsSessionId)
+      sessionStorage.setItem('sone.analytics', analyticsSessionId)
+  }, [analyticsSessionId])
 
   return <>{children}</>
+
+  async function sendToAnalytics(sessionId: string, data: any) {
+    return await fetch('/api/analytics/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sessionId, data }),
+    })
+      .then((response) => response.json())
+      .then((data) => !data.ok && console.log(data.message))
+      .catch((error) => console.log(error))
+  }
+
+  async function establishAnalyticsSession(
+    sessionData: ISessionData,
+    setSessionId: Function
+  ) {
+    console.log('Establishing analytics session...')
+
+    return await fetch('/api/analytics/establish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(sessionData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.ok) {
+          setSessionId(data.sessionId)
+          sendToAnalytics(data.sessionId, {
+            action: 'landed',
+            path: router.asPath,
+          })
+        } else {
+          console.log('ERROR ESTABLISHING ANALYTICS SESSION')
+        }
+      })
+      .catch((error) => console.log({ message: 'ERROR', error }))
+  }
 }
 
 export default Analytics
-
-async function sendToAnalytics(sessionId: string, data: any) {
-  return await fetch('https://analytics.sone.works', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ service: 'tone-app', sessionId, data }),
-  })
-    .then((response) => response.json())
-    .then((data) => !data.ok && console.log(data.message))
-    .catch((error) => console.log(error))
-}
-
-interface ISessionData {
-  screen: {
-    width: number
-    height: number
-  }
-  languages: readonly string[]
-  userAgent: string
-}
-
-async function establishAnalyticsSession(
-  sessionData: ISessionData,
-  setSessionId: Function
-) {
-  return await fetch('/api/analytics/establish', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(sessionData),
-  })
-    .then((response) => response.json())
-    .then((data) =>
-      data.ok
-        ? setSessionId(data.sessionId)
-        : console.log('ERROR ESTABLISHING ANALYTICS SESSION')
-    )
-    .catch((error) => console.log(error))
-}
