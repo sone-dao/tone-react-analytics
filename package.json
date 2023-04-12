@@ -1,7 +1,7 @@
 {
-  "name": "@sone-dao/tone-react-analytics",
+  "name": "@sone-dao/tone-react-analytics-context",
   "version": "1.1.0",
-  "repository": "https://github.com/sone-dao/tone-react-analytics.git",
+  "repository": "https://github.com/sone-dao/tone-react-analytics-context.git",
   "license": "MIT",
   "scripts": {
     "build": "rollup -c",
